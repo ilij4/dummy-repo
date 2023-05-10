@@ -44,52 +44,46 @@ async function safePromise<T>(
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlLZXkiOiJhNzNiNTlhZjE3ZjA2ZDFlMWZlNGVmN2Y2ZGFhYmJkZTIyYTg0OWEwNjc2NzMzMTQxMmE1MGM2MmU3NWI1ZTgxNjk3MTBhOWU4ZWFkMzAzOTE5YmEzMmQ0ZTk5ZmUzYjk2ZGY3ZTBhZDRmMzY0ZTEwNTZhMzkzNjNmMzNjYTgzYSIsImlhdCI6MTY4MjM0NTA5NSwiaXNzIjoid3d3LnNwaGVyb24ubmV0d29yayJ9.x1tuhqkJtNwpVpT6Pg1e8X_TmuI1ft0JKHWo3WA8m_Y",
   });
 
-  // let topicId = "";
-  // computeClient.clusterInstance.subscribeToEventStream((event) => {
-  //   Logger.info(`EVENT: ${JSON.stringify(event)}`);
+  let topicId = "";
+  computeClient.instance.subscribeToEventStream((event) => {
+    Logger.info(`EVENT: ${JSON.stringify(event)}`);
 
-  //   let created = false;
-  //   if (!created && event.session) {
-  //     topicId = event.session;
+    let created = false;
+    if (!created && event.session) {
+      topicId = event.session;
 
-  //     const createClusterInstance: CreateClusterInstanceRequest = {
-  //       organizationId: "63612a842e50ee3ffbebcf06",
-  //       configuration: {
-  //         folderName: "",
-  //         protocol: ClusterProtocolEnum.AKASH,
-  //         image: "crccheck/hello-world",
-  //         tag: "latest",
-  //         instanceCount: 1,
-  //         buildImage: false,
-  //         ports: [{ containerPort: 8000, exposedPort: 8000 }],
-  //         env: [{ value: "t=t", isSecret: false }],
-  //         command: [],
-  //         args: [],
-  //         region: "any",
-  //         akashMachineImageName: "Ventus Medium",
-  //       },
-  //       uniqueTopicId: topicId,
-  //       clusterUrl: "crccheck/hello-world",
-  //       clusterProvider: ProviderEnum.DOCKERHUB,
-  //       clusterName: "wallet test sdk",
-  //       healthCheckUrl: "/",
-  //       healthCheckPort: 8000,
-  //     };
+      const createClusterInstance: InstanceCreationConfig = {
+        configuration: {
+          image: "crccheck/hello-world",
+          tag: "latest",
+          instanceCount: 1,
+          ports: [{ containerPort: 8000, exposedPort: 8000 }],
+          env: [{ key: "t", value: "t", isSecret: false }],
+          command: [],
+          args: [],
+          region: "any",
+          machineImageName: "Ventus Small",
+        },
+        // uniqueTopicId: topicId,
+        clusterName: "wallet test sdk",
+        healthCheckPath: "/",
+        healthCheckPort: 8000,
+      };
 
-  //     computeClient.clusterInstance.create(createClusterInstance);
+      computeClient.instance.create(createClusterInstance);
 
-  //     created = true;
+      created = true;
 
-  // computeClient.clusterInstance.triggerHealthCheck(
-  //   "64528d088facc70012cbe9a0",
-  //   topicId
-  // );
-  //   }
-  // });
+      computeClient.instance.triggerLatestHealth(
+        "64528d088facc70012cbe9a0",
+        topicId
+      );
+    }
+  });
 
-  // setInterval(() => {
-  //   Logger.info("asd");
-  // }, 10000);
+  setInterval(() => {
+    Logger.info("asd");
+  }, 10000);
 
   // const org: Organization = await computeClient.organization.get();
 
@@ -104,10 +98,10 @@ async function safePromise<T>(
   // const marketplaceApp: MarketplaceApp =
   //   await computeClient.computeMarketplace.get(marketplaceApps[0].id);
 
-  const clusters: Cluster[] = await computeClient.organization.getClusters({
-    skip: 0,
-    limit: 10,
-  });
+  // const clusters: Cluster[] = await computeClient.organization.getClusters({
+  //   skip: 0,
+  //   limit: 10,
+  // });
 
   // clusters.forEach(async (cluster) => {
   //   const promises: any[] = [];
@@ -182,39 +176,23 @@ async function safePromise<T>(
   //   updateInstance
   // );
 
-  const createClusterInstance: InstanceCreationConfig = {
-    configuration: {
-      folderName: "",
-      protocol: ClusterProtocolEnum.AKASH,
-      image: "crccheck/hello-world",
-      tag: "latest",
-      instanceCount: 1,
-      buildImage: false,
-      ports: [{ containerPort: 8000, exposedPort: 8000 }],
-      env: [{ key: "t", value: "t", isSecret: false }],
-      command: [],
-      args: [],
-      region: "any",
-      machineImageName: "Ventus Small",
-    },
-    // uniqueTopicId: topicId,
-    clusterUrl: "crccheck/hello-world",
-    clusterProvider: ProviderEnum.DOCKERHUB,
-    clusterName: "wallet test sdk",
-    healthCheckUrl: "/",
-    healthCheckPort: 8000,
-  };
-
-  // const clusterInstancesExtended: InstanceDetailed[] =
-  //   await computeClient.cluster.getInstances(clusters[0].id, {
-  //     skip: 0,
-  //     limit: 10,
-  //   });
-
-  // clusterInstancesExtended.forEach((instance) => {
-  //   if (instance.state === InstanceStateEnum.ACTIVE)
-  //     promises.push(computeClient.instance.close(instance.id));
-  // });
+  // const createClusterInstance: InstanceCreationConfig = {
+  //   configuration: {
+  //     image: "crccheck/hello-world",
+  //     tag: "latest",
+  //     instanceCount: 1,
+  //     ports: [{ containerPort: 8000, exposedPort: 8000 }],
+  //     env: [{ key: "t", value: "t", isSecret: false }],
+  //     command: [],
+  //     args: [],
+  //     region: "any",
+  //     machineImageName: "Ventus Small",
+  //   },
+  //   // uniqueTopicId: topicId,
+  //   clusterName: "wallet test sdk",
+  //   healthCheckPath: "/",
+  //   healthCheckPort: 8000,
+  // };
 
   // const clusterInstance: Instance = await computeClient.instance.get(
   //   clusterInstancesExtended[0].id
@@ -257,7 +235,7 @@ async function safePromise<T>(
 
   // await Promise.all(
   //   clusterInstancesExtended.map((instance) => {
-  //     if (instance.state === ClusterInstanceStateEnum.ACTIVE)
+  //     if (instance.state === InstanceStateEnum.ACTIVE)
   //       computeClient.instance.close(instance.id);
   //   })
   // );
