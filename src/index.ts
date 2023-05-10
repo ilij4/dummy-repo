@@ -1,7 +1,42 @@
-import SpheronComputeClient, { Cluster, ClusterFundsUsage, ClusterInstance, ClusterInstanceExtendedInfo, ClusterInstanceOrder, ClusterInstanceStateEnum, ClusterInstancesInfo, ClusterProtocolEnum, ComputeMachine, CreateInstanceFromMarketplaceRequest, CreateInstanceRequest, Domain, DomainTypeEnum, InstanceLogType, InstanceResponse, MarketplaceApp, MarketplaceInstanceResponse, ProviderEnum, UpdateInstaceRequest } from "@spheron/compute";
+import SpheronComputeClient, {
+  Cluster,
+  ClusterFundsUsage,
+  ClusterProtocolEnum,
+  ComputeMachine,
+  Domain,
+  DomainTypeEnum,
+  Instance,
+  InstanceCreationConfig,
+  InstanceDeployment,
+  InstanceDetailed,
+  InstanceLogType,
+  InstanceResponse,
+  InstanceStateEnum,
+  InstancesInfo,
+  MarketplaceApp,
+  MarketplaceInstanceCreationConfig,
+  MarketplaceInstanceResponse,
+  Organization,
+  ProviderEnum,
+  UpdateInstaceRequest,
+  UsageWithLimits,
+} from "@spheron/compute";
 import Logger from "./config/logger";
 import { link } from "fs";
 import { type } from "os";
+
+async function safePromise<T>(
+  asyncFunction: Promise<T>,
+  errorInfo?: string
+): Promise<void> {
+  try {
+    await asyncFunction;
+  } catch (error) {
+    Logger.error(
+      `Error safePromise -${errorInfo ? " errorInfo - " : " "} ${error.message}`
+    );
+  }
+}
 
 (async () => {
   const computeClient: SpheronComputeClient = new SpheronComputeClient({
@@ -45,10 +80,10 @@ import { type } from "os";
 
   //     created = true;
 
-      // computeClient.clusterInstance.triggerHealthCheck(
-      //   "64528d088facc70012cbe9a0",
-      //   topicId
-      // );
+  // computeClient.clusterInstance.triggerHealthCheck(
+  //   "64528d088facc70012cbe9a0",
+  //   topicId
+  // );
   //   }
   // });
 
@@ -56,84 +91,98 @@ import { type } from "os";
   //   Logger.info("asd");
   // }, 10000);
 
-  const categories: string[] =
-    await computeClient.computeMarketplace.getCategories();
+  // const org: Organization = await computeClient.organization.get();
 
-  const marketplaceApps: MarketplaceApp[] =
-    await computeClient.computeMarketplace.getAll();
+  // const orgUsage: UsageWithLimits = await computeClient.organization.getUsage();
 
-  const marketplaceApp: MarketplaceApp =
-    await computeClient.computeMarketplace.get(
-      marketplaceApps[0].id
-    );
+  // const categories: string[] =
+  //   await computeClient.computeMarketplace.getCategories();
 
+  // const marketplaceApps: MarketplaceApp[] =
+  //   await computeClient.computeMarketplace.getAll();
 
-  const clusters: Cluster[] = await computeClient.organization.getClusters("63612a842e50ee3ffbebcf06", {skip:0, limit:10});
+  // const marketplaceApp: MarketplaceApp =
+  //   await computeClient.computeMarketplace.get(marketplaceApps[0].id);
 
-  const clusterInstancesExtended: ClusterInstanceExtendedInfo[] =
-    await computeClient.cluster.getInstances(clusters[0].id, {
-      skip: 0,
-      limit: 10,
-    });
+  const clusters: Cluster[] = await computeClient.organization.getClusters({
+    skip: 0,
+    limit: 10,
+  });
 
-  const clusterFunds: ClusterFundsUsage =
-    await computeClient.cluster.getUsage(clusters[0].id);
+  // clusters.forEach(async (cluster) => {
+  //   const promises: any[] = [];
+  //   const clusterInstances: InstanceDetailed[] =
+  //     await computeClient.cluster.getInstances(cluster.id, {
+  //       skip: 0,
+  //       limit: 10,
+  //     });
+  //   clusterInstances.forEach((instance) => {
+  //     if (instance.state === InstanceStateEnum.ACTIVE)
+  //       promises.push(computeClient.instance.close(instance.id));
+  //   });
 
-  const clusterInstancesInfo: ClusterInstancesInfo =
-    await computeClient.cluster.getInstancesInfo(clusters[0].id);
+  //   await Promise.all(promises);
+  // });
 
-  await computeClient.cluster.delete(clusters[0].id);
+  // const clusterInstancesExtended: InstanceDetailed[] =
+  //   await computeClient.cluster.getInstances(clusters[0].id, {
+  //     skip: 0,
+  //     limit: 10,
+  //   });
 
-  const computeMachines: ComputeMachine[] =
-    await computeClient.clusterMachine.get({
-      skip: 0,
-      limit: 5,
-    });
+  // const clusterFunds: ClusterFundsUsage = await computeClient.cluster.getUsage(
+  //   clusters[0].id
+  // );
 
-  const regions: string[] =
-    await computeClient.clusterMachine.getRegions();
+  // const clusterInstancesInfo: InstancesInfo =
+  //   await computeClient.cluster.getInstancesInfo(clusters[0].id);
 
-  const mongoTemplate: MarketplaceApp = marketplaceApps[0];
+  // await computeClient.cluster.delete(clusters[0].id);
 
-  const clusterInstanceFromTemplate: CreateInstanceFromMarketplaceRequest =
-    {
-      templateId: mongoTemplate.id,
-      environmentVariables: mongoTemplate.serviceData.variables.map(
-        (templateVar) => {
-          return {
-            label: templateVar.label,
-            value: templateVar.defaultValue,
-            isSecret: false,
-          };
-        }
-      ),
-      organizationId: "63612a842e50ee3ffbebcf06",
-      akashImageId: computeMachines[2].id,
-      region: "any",
-    };
+  // const computeMachines: ComputeMachine[] =
+  //   await computeClient.computeMachine.get({
+  //     skip: 0,
+  //     limit: 5,
+  //   });
 
-  const marketplaceInstance: MarketplaceInstanceResponse =
-    await computeClient.instance.createFromMartketplace(
-      clusterInstanceFromTemplate
-    );
+  // const regions: string[] = await computeClient.computeMachine.getRegions();
 
-  const updateInstance: UpdateInstaceRequest = {
-    env: [{ value: "t2=t2", isSecret: false }],
-    command: [],
-    args: [],
-    uniqueTopicId: "89fcf863-a3ab-44f2-9276-9ea75631498c",
-    tag: "latest",
-  };
+  // const mongoTemplate: MarketplaceApp = marketplaceApps[0];
 
-  const updateResponse: InstanceResponse =
-    await computeClient.instance.update(
-      "6448013960d4d90012b77a2a",
-      "63612a842e50ee3ffbebcf06",
-      updateInstance
-    );
+  // const clusterInstanceFromTemplate: MarketplaceInstanceCreationConfig = {
+  //   templateId: mongoTemplate.id,
+  //   environmentVariables: mongoTemplate.serviceData.variables.map(
+  //     (templateVar) => {
+  //       return {
+  //         label: templateVar.label,
+  //         value: templateVar.defaultValue,
+  //         isSecret: false,
+  //       };
+  //     }
+  //   ),
+  //   machineImageId: computeMachines[2].id,
+  //   region: "any",
+  // };
 
-  const createClusterInstance: CreateInstanceRequest = {
-    organizationId: "63612a842e50ee3ffbebcf06",
+  // const marketplaceInstance: MarketplaceInstanceResponse =
+  //   await computeClient.instance.createFromMartketplace(
+  //     clusterInstanceFromTemplate
+  //   );
+
+  // const updateInstance: UpdateInstaceRequest = {
+  //   env: [{ value: "t2=t2", isSecret: false }],
+  //   command: [],
+  //   args: [],
+  //   uniqueTopicId: "89fcf863-a3ab-44f2-9276-9ea75631498c",
+  //   tag: "latest",
+  // };
+
+  // const updateResponse: InstanceResponse = await computeClient.instance.update(
+  //   "63612a842e50ee3ffbebcf06",
+  //   updateInstance
+  // );
+
+  const createClusterInstance: InstanceCreationConfig = {
     configuration: {
       folderName: "",
       protocol: ClusterProtocolEnum.AKASH,
@@ -142,75 +191,69 @@ import { type } from "os";
       instanceCount: 1,
       buildImage: false,
       ports: [{ containerPort: 8000, exposedPort: 8000 }],
-      env: [{ value: "t=t", isSecret: false }],
+      env: [{ key: "t", value: "t", isSecret: false }],
       command: [],
       args: [],
       region: "any",
-      akashMachineImageName: "Ventus Medium",
+      machineImageName: "Ventus Small",
     },
     // uniqueTopicId: topicId,
     clusterUrl: "crccheck/hello-world",
     clusterProvider: ProviderEnum.DOCKERHUB,
-    clusterName: "wallet test",
+    clusterName: "wallet test sdk",
     healthCheckUrl: "/",
     healthCheckPort: 8000,
   };
 
-  const instanceFromTemplate: InstanceResponse =
-    await computeClient.instance.create(createClusterInstance);
-
-  // const numberOfInstances = 1;
-
-  // const promises: any[] = [];
-  // for (let i = 0; i < numberOfInstances; i++) {
-  //   promises.push(computeClient.instance.create(createClusterInstance));
-  // }
+  // const clusterInstancesExtended: InstanceDetailed[] =
+  //   await computeClient.cluster.getInstances(clusters[0].id, {
+  //     skip: 0,
+  //     limit: 10,
+  //   });
 
   // clusterInstancesExtended.forEach((instance) => {
-  //   if (instance.state === ClusterInstanceStateEnum.ACTIVE)
+  //   if (instance.state === InstanceStateEnum.ACTIVE)
   //     promises.push(computeClient.instance.close(instance.id));
   // });
 
-  // await Promise.all(promises);
+  // const clusterInstance: Instance = await computeClient.instance.get(
+  //   clusterInstancesExtended[0].id
+  // );
 
-  const clusterInstance: ClusterInstance =
-    await computeClient.instance.get(clusterInstancesExtended[0].id);
+  // const instanceDomains: Domain[] = await computeClient.instance.getDomains(
+  //   clusterInstance.id
+  // );
 
-  const instanceDomains: Domain[] = await computeClient.instance.getDomains(
-    clusterInstance.id
-  );
+  // const domainUpdate: Domain = await computeClient.instance.updateDomain(
+  //   clusterInstance.id,
+  //   instanceDomains[0].id,
+  //   {
+  //     name: "test2.com",
+  //     link: "provider.palmito.duckdns.org:31494",
+  //     type: DomainTypeEnum.DOMAIN,
+  //   }
+  // );
 
-  const domainUpdate: Domain = await computeClient.instance.updateDomain(
-    clusterInstance.id,
-    instanceDomains[0].id,
-    {
-      name: "test2.com",
-      link: "provider.palmito.duckdns.org:31494",
-      type: DomainTypeEnum.DOMAIN,
-    }
-  );
+  // await computeClient.instance.deleteDomain(
+  //   clusterInstance.id,
+  //   instanceDomains[0].id
+  // );
 
-  await computeClient.instance.deleteDomain(
-    clusterInstance.id,
-    instanceDomains[0].id
-  );
+  // const domains: Domain[] = await computeClient.instance.getDomains(
+  //   clusterInstance.id
+  // );
 
-  const domains: Domain[] =
-  await computeClient.instance.getDomains(
-    clusterInstance.id
-  );
+  // const response: { deployment: InstanceDeployment; liveLogs: string[] } =
+  //   await computeClient.instance.getInstanceDeployment(
+  //     clusterInstance.activeDeployment
+  //   );
 
-  const response: { order: ClusterInstanceOrder; liveLogs: string[] } =
-    await computeClient.instance.getClusterInstanceOrder(
-      clusterInstance.activeOrder
-    );
+  // const logs = await computeClient.instance.getInstanceDeploymentLogs(
+  //   response.deployment.id,
+  //   { from: 0, to: 1000, logType: InstanceLogType.INSTANCE_LOGS }
+  // );
 
-  const logs = await computeClient.instance.getClusterInstanceOrderLogs(
-    response.order.id,
-    { from: 0, to: 1000, logType: InstanceLogType.INSTANCE_LOGS }
-  );
-
-  await computeClient.instance.update("63612a842e50ee3ffbebcf06", clusterInstance.id, updateInstance)
+  // await computeClient.instance.update(clusterInstance.id, updateInstance);
 
   // await Promise.all(
   //   clusterInstancesExtended.map((instance) => {
@@ -218,19 +261,6 @@ import { type } from "os";
   //       computeClient.instance.close(instance.id);
   //   })
   // );
-
-  // const promises: any[] = [];
-  // const clusterInstances: ExtendedClusterInstance[] =
-  //   await computeClient.cluster.getInstances(clusters[0]._id, {
-  //     skip: 0,
-  //     limit: 10,
-  //   });
-  // clusterInstances.forEach((instance) => {
-  //   if (instance.state === ClusterInstanceStateEnum.ACTIVE)
-  //     promises.push(computeClient.clusterInstance.close(instance._id));
-  // });
-
-  // await Promise.all(promises);
 
   Logger.info("asdasd");
 })();
