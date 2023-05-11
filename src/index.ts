@@ -20,6 +20,8 @@ import SpheronComputeClient, {
   ProviderEnum,
   UpdateInstaceRequest,
   UsageWithLimits,
+  Event,
+  EventTypeEnum,
 } from "@spheron/compute";
 import Logger from "./config/logger";
 import { link } from "fs";
@@ -45,39 +47,39 @@ async function safePromise<T>(
   });
 
   let topicId = "";
-  computeClient.instance.subscribeToEventStream((event) => {
+  computeClient.instance.subscribeToEventStream(async (event: Event) => {
     Logger.info(`EVENT: ${JSON.stringify(event)}`);
 
-    let created = false;
-    if (!created && event.session) {
+    if (event.type === EventTypeEnum.CONNECTION) {
       topicId = event.session;
+      //   const createClusterInstance: InstanceCreationConfig = {
+      //     configuration: {
+      //       image: "crccheck/hello-world",
+      //       tag: "latest",
+      //       instanceCount: 1,
+      //       ports: [{ containerPort: 8000, exposedPort: 8000 }],
+      //       env: [{ key: "t", value: "t", isSecret: false }],
+      //       command: [],
+      //       args: [],
+      //       region: "any",
+      //       machineImageName: "Ventus Small",
+      //     },
+      //     uniqueTopicId: topicId,
+      //     clusterName: "wallet test sdk",
+      //     healthCheckPath: "/",
+      //     healthCheckPort: 8000,
+      //   };
 
-      const createClusterInstance: InstanceCreationConfig = {
-        configuration: {
-          image: "crccheck/hello-world",
-          tag: "latest",
-          instanceCount: 1,
-          ports: [{ containerPort: 8000, exposedPort: 8000 }],
-          env: [{ key: "t", value: "t", isSecret: false }],
-          command: [],
-          args: [],
-          region: "any",
-          machineImageName: "Ventus Small",
-        },
-        // uniqueTopicId: topicId,
-        clusterName: "wallet test sdk",
-        healthCheckPath: "/",
-        healthCheckPort: 8000,
-      };
-
-      computeClient.instance.create(createClusterInstance);
-
-      created = true;
+      //   await computeClient.instance.create(createClusterInstance);
 
       computeClient.instance.triggerLatestHealth(
-        "64528d088facc70012cbe9a0",
+        "645d0f52cb3b250012e8fedf",
         topicId
       );
+    }
+
+    if (event.type === EventTypeEnum.LATEST_HEALTH) {
+      Logger.info(`EVENT HEALTH: ${JSON.stringify(event)}`);
     }
   });
 
